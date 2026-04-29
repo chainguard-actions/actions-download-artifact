@@ -1,6 +1,12 @@
 # actions/download-artifact
 
-Hardened GitHub Action by [Chainguard](https://www.chainguard.dev).
+Hardened by [Chainguard](https://www.chainguard.dev) from the upstream action at [https://github.com/actions/download-artifact](https://github.com/actions/download-artifact).
+
+## Versions
+
+| Version | Tag | Upstream commit |
+|---------|-----|-----------------|
+| v8.0.1 | [`v8.0.1`](https://github.com/chainguard-actions/download-artifact/tree/v8.0.1) | — |
 
 ## Privacy
 
