@@ -1,5 +1,5 @@
 {
   "owner": "actions",
   "name": "download-artifact",
-  "visibility": ""
+  "visibility": "internal"
 }
