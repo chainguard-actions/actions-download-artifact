@@ -1,5 +1,6 @@
 {
   "owner": "actions",
   "name": "download-artifact",
-  "visibility": "internal"
+  "visibility": "internal",
+  "block_publish": false
 }
