@@ -1,6 +1,0 @@
-{
-  "owner": "actions",
-  "name": "download-artifact",
-  "visibility": "public",
-  "block_publish": false
-}
