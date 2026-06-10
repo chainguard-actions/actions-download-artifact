@@ -1,5 +1,7 @@
 # actions/download-artifact
 
+Download a build artifact that was previously uploaded in the workflow by the upload-artifact action
+
 Hardened by [Chainguard](https://www.chainguard.dev) from the upstream action at [https://github.com/actions/download-artifact](https://github.com/actions/download-artifact).
 
 ## Versions
