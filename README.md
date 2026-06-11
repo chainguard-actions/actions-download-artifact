@@ -8,7 +8,7 @@ Hardened by [Chainguard](https://www.chainguard.dev) from the upstream action at
 
 | Version | Tag | Upstream commit |
 |---------|-----|-----------------|
-| v8.0.1 | [`v8.0.1`](https://github.com/chainguard-actions/actions-download-artifact/tree/v8.0.1) | — |
+| v8.0.1 | [`v8.0.1`](https://github.com/chainguard-actions/actions-download-artifact/tree/v8.0.1) | [`3e5f45b`](https://github.com/actions/download-artifact/commit/3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c) |
 
 ## Privacy
 
