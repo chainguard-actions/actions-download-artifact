@@ -1,4 +1,4 @@
-name: Test download-artifact with name and path inputs
+name: Test download-artifact with artifact-ids and github-token inputs
 on:
   workflow_dispatch:
 jobs:
@@ -13,10 +13,13 @@ jobs:
         uses: .
         continue-on-error: true
         with:
-          name: my-artifact
+          artifact-ids: '123456789'
+          github-token: 'fake-token-for-testing'
           path: /tmp/artifacts
+          repository: ${{ github.repository }}
+          run-id: ${{ github.run_id }}
       - name: Assert step ran (inputs accepted)
         run: |
           echo "Step completed (with or without artifact found)"
           echo "download-path: ${{ steps.action.outputs.download-path }}"
-          echo "PASS: inputs name and path were accepted by the action"
+          echo "PASS: artifact-ids and github-token inputs were accepted by the action"
