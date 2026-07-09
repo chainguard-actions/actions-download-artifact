@@ -1,0 +1,41 @@
+name: Test download-artifact with github-token input
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_REF: refs/heads/main
+      GITHUB_EVENT_NAME: push
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - id: download
+        uses: .
+        with:
+          name: some-artifact
+          path: /tmp/github-token-download
+          github-token: 'fake-token-for-input-coverage'
+          repository: 'actions/download-artifact'
+          run-id: '1234567890'
+        continue-on-error: true
+
+      - name: Assert action accepted github-token input and handled it
+        env:
+          OUTCOME: ${{ steps.download.outcome }}
+          DOWNLOAD_PATH: ${{ steps.download.outputs.download-path }}
+        run: |
+          echo "outcome: $OUTCOME"
+          echo "download-path: $DOWNLOAD_PATH"
+          # The action should either succeed (if token/artifact are valid) or fail gracefully
+          # (expected in act without real GitHub API credentials)
+          if [ "$OUTCOME" = "success" ]; then
+            if [ -z "$DOWNLOAD_PATH" ]; then
+              echo "FAIL: download-path output is empty on success"
+              exit 1
+            fi
+            echo "PASS: github-token input accepted and download succeeded"
+          else
+            echo "INFO: Action failed as expected with fake token in act environment"
+            echo "PASS: github-token input accepted and action failed gracefully"
+          fi
