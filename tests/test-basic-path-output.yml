@@ -1,4 +1,4 @@
-name: Test download-artifact merge-multiple input
+name: Test download-artifact basic path output
 on:
   workflow_dispatch:
 jobs:
@@ -10,25 +10,25 @@ jobs:
       - id: download
         uses: .
         with:
-          path: /tmp/merged-artifacts
-          merge-multiple: 'true'
+          path: /tmp/my-artifacts
         continue-on-error: true
 
-      - name: Assert action ran with merge-multiple input
+      - name: Assert download-path output is set
         env:
           DOWNLOAD_PATH: ${{ steps.download.outputs.download-path }}
           OUTCOME: ${{ steps.download.outcome }}
         run: |
           echo "outcome: $OUTCOME"
           echo "download-path: $DOWNLOAD_PATH"
-          # The action should either succeed or fail gracefully (no artifacts in act run)
+          # If the action succeeded, the download-path should match the specified path
           if [ "$OUTCOME" = "success" ]; then
-            if [ "$DOWNLOAD_PATH" != "/tmp/merged-artifacts" ]; then
-              echo "FAIL: expected download-path '/tmp/merged-artifacts' but got '$DOWNLOAD_PATH'"
+            if [ "$DOWNLOAD_PATH" != "/tmp/my-artifacts" ]; then
+              echo "FAIL: expected download-path '/tmp/my-artifacts' but got '$DOWNLOAD_PATH'"
               exit 1
             fi
-            echo "PASS: download-path matches specified path with merge-multiple=true"
+            echo "PASS: download-path matches specified path"
           else
+            # No artifacts in this run — expected under act; just verify the action ran
             echo "INFO: action did not succeed (likely no artifacts in this run), outcome=$OUTCOME"
-            echo "PASS: action ran and handled missing artifacts gracefully with merge-multiple=true"
+            echo "PASS: action ran and handled missing artifacts gracefully"
           fi

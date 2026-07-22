@@ -1,21 +1,17 @@
-name: Test download-artifact pattern matching
+name: Test download-artifact pattern input
 on:
   workflow_dispatch:
 jobs:
   test:
     runs-on: ubuntu-latest
-    env:
-      GITHUB_REF: refs/heads/main
-      GITHUB_EVENT_NAME: push
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - id: download
         uses: .
         with:
-          pattern: 'build-*'
           path: /tmp/pattern-artifacts
-          merge-multiple: 'false'
+          pattern: 'my-artifact-*'
         continue-on-error: true
 
       - name: Assert action ran with pattern input
@@ -25,15 +21,14 @@ jobs:
         run: |
           echo "outcome: $OUTCOME"
           echo "download-path: $DOWNLOAD_PATH"
-          # If the action succeeded, verify the download-path matches the specified path
+          # The action should either succeed or fail gracefully (no artifacts in act run)
           if [ "$OUTCOME" = "success" ]; then
             if [ "$DOWNLOAD_PATH" != "/tmp/pattern-artifacts" ]; then
               echo "FAIL: expected download-path '/tmp/pattern-artifacts' but got '$DOWNLOAD_PATH'"
               exit 1
             fi
-            echo "PASS: download-path matches specified path with pattern filter"
+            echo "PASS: download-path matches specified path with pattern input"
           else
-            # Action failed (expected without real GitHub API access in act environment)
-            echo "INFO: Action failed as expected without real GitHub API credentials in act environment"
-            echo "PASS: action failed gracefully with pattern input"
+            echo "INFO: action did not succeed (likely no artifacts in this run), outcome=$OUTCOME"
+            echo "PASS: action ran and handled missing artifacts gracefully with pattern input"
           fi

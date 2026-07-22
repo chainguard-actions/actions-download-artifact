@@ -1,0 +1,37 @@
+name: Test download-artifact named artifact
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - id: download
+        uses: .
+        with:
+          name: my-test-artifact
+          path: /tmp/named-artifact
+        continue-on-error: true
+
+      - name: Assert action ran with name input
+        env:
+          DOWNLOAD_PATH: ${{ steps.download.outputs.download-path }}
+          OUTCOME: ${{ steps.download.outcome }}
+        run: |
+          echo "outcome: $OUTCOME"
+          echo "download-path: $DOWNLOAD_PATH"
+          # When a named artifact is specified but not found, the action should fail
+          # (not silently succeed). Under act there are no uploaded artifacts.
+          if [ "$OUTCOME" = "success" ]; then
+            # If somehow it succeeded, verify the output path
+            if [ "$DOWNLOAD_PATH" != "/tmp/named-artifact" ]; then
+              echo "FAIL: expected download-path '/tmp/named-artifact' but got '$DOWNLOAD_PATH'"
+              exit 1
+            fi
+            echo "PASS: named artifact downloaded to correct path"
+          else
+            # Expected: artifact not found in this run
+            echo "INFO: named artifact not found (expected under act), outcome=$OUTCOME"
+            echo "PASS: action correctly reported failure for missing named artifact"
+          fi

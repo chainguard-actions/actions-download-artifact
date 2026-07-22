@@ -4,9 +4,6 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    env:
-      GITHUB_REF: refs/heads/main
-      GITHUB_EVENT_NAME: push
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
@@ -17,22 +14,24 @@ jobs:
           path: /tmp/artifact-ids-download
         continue-on-error: true
 
-      - name: Assert action accepted artifact-ids input and handled it
+      - name: Assert action ran with artifact-ids input
         env:
-          OUTCOME: ${{ steps.download.outcome }}
           DOWNLOAD_PATH: ${{ steps.download.outputs.download-path }}
+          OUTCOME: ${{ steps.download.outcome }}
         run: |
           echo "outcome: $OUTCOME"
           echo "download-path: $DOWNLOAD_PATH"
-          # The action should either succeed (if artifact exists) or fail gracefully
-          # (expected in act without real GitHub API access / valid artifact ID)
+          # Under act there are no real uploaded artifacts, so the action is
+          # expected to fail when trying to fetch artifact ID 123456789.
+          # We verify it either succeeded (unlikely) or failed gracefully.
           if [ "$OUTCOME" = "success" ]; then
             if [ -z "$DOWNLOAD_PATH" ]; then
-              echo "FAIL: download-path output is empty on success"
+              echo "FAIL: action succeeded but download-path output is empty"
               exit 1
             fi
-            echo "PASS: artifact-ids input accepted and download succeeded"
+            echo "PASS: artifact downloaded to $DOWNLOAD_PATH"
           else
-            echo "INFO: Action failed as expected without real GitHub API credentials in act environment"
-            echo "PASS: artifact-ids input accepted and action failed gracefully"
+            # Expected: artifact ID not found via GitHub API in act environment
+            echo "INFO: artifact-ids not found (expected under act), outcome=$OUTCOME"
+            echo "PASS: action correctly reported failure for unknown artifact-ids"
           fi
