@@ -1,0 +1,50 @@
+name: Test basic download by name
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Create artifact content
+        run: |
+          mkdir -p /tmp/upload-content
+          echo "hello from artifact" > /tmp/upload-content/hello.txt
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: test-artifact-basic
+          path: /tmp/upload-content/hello.txt
+
+      - id: download
+        uses: .
+        with:
+          name: test-artifact-basic
+          path: /tmp/downloaded-basic
+
+      - name: Assert file exists
+        run: |
+          if [ ! -f "/tmp/downloaded-basic/hello.txt" ]; then
+            echo "FAIL: expected file /tmp/downloaded-basic/hello.txt not found"
+            exit 1
+          fi
+          CONTENT="$(cat /tmp/downloaded-basic/hello.txt)"
+          echo "content: $CONTENT"
+          if [ "$CONTENT" != "hello from artifact" ]; then
+            echo "FAIL: unexpected content: $CONTENT"
+            exit 1
+          fi
+          echo "PASS: file content matches"
+
+      - name: Assert download-path output
+        env:
+          ACTUAL: ${{ steps.download.outputs.download-path }}
+        run: |
+          echo "actual download-path: $ACTUAL"
+          if [ -z "$ACTUAL" ]; then
+            echo "FAIL: download-path output is empty"
+            exit 1
+          fi
+          echo "PASS: download-path is set to $ACTUAL"

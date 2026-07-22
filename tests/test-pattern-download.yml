@@ -1,0 +1,74 @@
+name: Test pattern-based download
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Create artifact content
+        run: |
+          mkdir -p /tmp/upload-pattern-a
+          mkdir -p /tmp/upload-pattern-b
+          echo "artifact alpha" > /tmp/upload-pattern-a/alpha.txt
+          echo "artifact beta"  > /tmp/upload-pattern-b/beta.txt
+
+      - name: Upload artifact alpha
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: pattern-artifact-alpha
+          path: /tmp/upload-pattern-a/alpha.txt
+
+      - name: Upload artifact beta
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: pattern-artifact-beta
+          path: /tmp/upload-pattern-b/beta.txt
+
+      - id: download
+        uses: .
+        with:
+          pattern: 'pattern-artifact-*'
+          path: /tmp/downloaded-pattern
+          merge-multiple: 'false'
+
+      - name: Assert artifacts downloaded into named subdirectories
+        run: |
+          echo "Contents of /tmp/downloaded-pattern:"
+          ls -la /tmp/downloaded-pattern/ || echo "(directory does not exist)"
+
+          if [ ! -f "/tmp/downloaded-pattern/pattern-artifact-alpha/alpha.txt" ]; then
+            echo "FAIL: alpha.txt not found in pattern-artifact-alpha subdirectory"
+            exit 1
+          fi
+          if [ ! -f "/tmp/downloaded-pattern/pattern-artifact-beta/beta.txt" ]; then
+            echo "FAIL: beta.txt not found in pattern-artifact-beta subdirectory"
+            exit 1
+          fi
+
+          CONTENT_A="$(cat /tmp/downloaded-pattern/pattern-artifact-alpha/alpha.txt)"
+          CONTENT_B="$(cat /tmp/downloaded-pattern/pattern-artifact-beta/beta.txt)"
+          echo "alpha content: $CONTENT_A"
+          echo "beta content: $CONTENT_B"
+
+          if [ "$CONTENT_A" != "artifact alpha" ]; then
+            echo "FAIL: unexpected alpha content: $CONTENT_A"
+            exit 1
+          fi
+          if [ "$CONTENT_B" != "artifact beta" ]; then
+            echo "FAIL: unexpected beta content: $CONTENT_B"
+            exit 1
+          fi
+          echo "PASS: both artifacts downloaded into named subdirectories"
+
+      - name: Assert download-path output is set
+        env:
+          ACTUAL: ${{ steps.download.outputs.download-path }}
+        run: |
+          echo "actual download-path: $ACTUAL"
+          if [ -z "$ACTUAL" ]; then
+            echo "FAIL: download-path output is empty"
+            exit 1
+          fi
+          echo "PASS: download-path is set"

@@ -1,0 +1,74 @@
+name: Test merge-multiple download
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Create artifact content
+        run: |
+          mkdir -p /tmp/upload-merge-x
+          mkdir -p /tmp/upload-merge-y
+          echo "file from x" > /tmp/upload-merge-x/x-file.txt
+          echo "file from y" > /tmp/upload-merge-y/y-file.txt
+
+      - name: Upload artifact x
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: merge-artifact-x
+          path: /tmp/upload-merge-x/x-file.txt
+
+      - name: Upload artifact y
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: merge-artifact-y
+          path: /tmp/upload-merge-y/y-file.txt
+
+      - id: download
+        uses: .
+        with:
+          pattern: 'merge-artifact-*'
+          path: /tmp/downloaded-merged
+          merge-multiple: 'true'
+
+      - name: Assert both files merged into single directory
+        run: |
+          echo "Contents of /tmp/downloaded-merged:"
+          ls -la /tmp/downloaded-merged/ || echo "(directory does not exist)"
+
+          if [ ! -f "/tmp/downloaded-merged/x-file.txt" ]; then
+            echo "FAIL: x-file.txt not found in merged directory"
+            exit 1
+          fi
+          if [ ! -f "/tmp/downloaded-merged/y-file.txt" ]; then
+            echo "FAIL: y-file.txt not found in merged directory"
+            exit 1
+          fi
+
+          CONTENT_X="$(cat /tmp/downloaded-merged/x-file.txt)"
+          CONTENT_Y="$(cat /tmp/downloaded-merged/y-file.txt)"
+          echo "x content: $CONTENT_X"
+          echo "y content: $CONTENT_Y"
+
+          if [ "$CONTENT_X" != "file from x" ]; then
+            echo "FAIL: unexpected x content: $CONTENT_X"
+            exit 1
+          fi
+          if [ "$CONTENT_Y" != "file from y" ]; then
+            echo "FAIL: unexpected y content: $CONTENT_Y"
+            exit 1
+          fi
+          echo "PASS: both artifacts merged into single directory"
+
+      - name: Assert download-path output is set
+        env:
+          ACTUAL: ${{ steps.download.outputs.download-path }}
+        run: |
+          echo "actual download-path: $ACTUAL"
+          if [ -z "$ACTUAL" ]; then
+            echo "FAIL: download-path output is empty"
+            exit 1
+          fi
+          echo "PASS: download-path is set"

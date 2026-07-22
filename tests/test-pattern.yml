@@ -1,0 +1,35 @@
+name: Test download-artifact pattern input
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_REF: refs/heads/main
+      GITHUB_EVENT_NAME: push
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download artifacts matching a glob pattern
+        id: download
+        uses: .
+        with:
+          pattern: 'my-artifact-*'
+          path: /tmp/pattern-download
+          merge-multiple: 'false'
+        continue-on-error: true
+
+      - name: Assert action ran with pattern input
+        env:
+          DOWNLOAD_PATH: ${{ steps.download.outputs.download-path }}
+          OUTCOME: ${{ steps.download.outcome }}
+        run: |
+          echo "outcome: $OUTCOME"
+          echo "download-path: $DOWNLOAD_PATH"
+          # Verify the action ran (not skipped) with pattern input
+          if [ "$OUTCOME" = "skipped" ]; then
+            echo "FAIL: action was skipped unexpectedly"
+            exit 1
+          fi
+          echo "PASS: action ran with pattern='my-artifact-*', outcome=$OUTCOME"

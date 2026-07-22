@@ -1,0 +1,55 @@
+name: Test download to custom path
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Create artifact content
+        run: |
+          mkdir -p /tmp/upload-custom
+          echo "custom path test" > /tmp/upload-custom/data.txt
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: test-artifact-custom-path
+          path: /tmp/upload-custom/data.txt
+
+      - id: download
+        uses: .
+        with:
+          name: test-artifact-custom-path
+          path: /tmp/my-custom-download-dir
+
+      - name: Assert file exists at custom path
+        run: |
+          if [ ! -f "/tmp/my-custom-download-dir/data.txt" ]; then
+            echo "FAIL: expected file /tmp/my-custom-download-dir/data.txt not found"
+            ls -la /tmp/my-custom-download-dir/ || echo "(directory does not exist)"
+            exit 1
+          fi
+          CONTENT="$(cat /tmp/my-custom-download-dir/data.txt)"
+          echo "content: $CONTENT"
+          if [ "$CONTENT" != "custom path test" ]; then
+            echo "FAIL: unexpected content: $CONTENT"
+            exit 1
+          fi
+          echo "PASS: file found at custom path"
+
+      - name: Assert download-path output matches custom path
+        env:
+          ACTUAL: ${{ steps.download.outputs.download-path }}
+        run: |
+          echo "actual download-path: $ACTUAL"
+          if [ -z "$ACTUAL" ]; then
+            echo "FAIL: download-path output is empty"
+            exit 1
+          fi
+          if [ "$ACTUAL" != "/tmp/my-custom-download-dir" ]; then
+            echo "FAIL: expected '/tmp/my-custom-download-dir' but got '$ACTUAL'"
+            exit 1
+          fi
+          echo "PASS: download-path output matches custom path"

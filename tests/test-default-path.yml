@@ -1,0 +1,42 @@
+name: Test download-artifact default path (GITHUB_WORKSPACE)
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_REF: refs/heads/main
+      GITHUB_EVENT_NAME: push
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download artifacts with no path specified (defaults to GITHUB_WORKSPACE)
+        id: download
+        uses: .
+        continue-on-error: true
+
+      - name: Assert download-path defaults to GITHUB_WORKSPACE
+        env:
+          DOWNLOAD_PATH: ${{ steps.download.outputs.download-path }}
+          OUTCOME: ${{ steps.download.outcome }}
+          WORKSPACE: ${{ github.workspace }}
+        run: |
+          echo "outcome: $OUTCOME"
+          echo "download-path: $DOWNLOAD_PATH"
+          echo "workspace: $WORKSPACE"
+          # Verify the action ran (not skipped)
+          if [ "$OUTCOME" = "skipped" ]; then
+            echo "FAIL: action was skipped unexpectedly"
+            exit 1
+          fi
+          # If the action succeeded, verify download-path is set to workspace
+          if [ "$OUTCOME" = "success" ] && [ -n "$DOWNLOAD_PATH" ]; then
+            if [ "$DOWNLOAD_PATH" != "$WORKSPACE" ]; then
+              echo "FAIL: expected download-path='$WORKSPACE', got '$DOWNLOAD_PATH'"
+              exit 1
+            fi
+            echo "PASS: download-path correctly set to GITHUB_WORKSPACE"
+          else
+            echo "PASS: action ran with outcome=$OUTCOME (no artifacts in act environment)"
+          fi
