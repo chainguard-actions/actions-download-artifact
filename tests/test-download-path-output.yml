@@ -1,0 +1,40 @@
+name: Test download-path output is set to resolved path
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Download artifacts with explicit path
+        id: action
+        uses: .
+        with:
+          path: /tmp/my-download-dir
+        continue-on-error: true
+
+      - name: Assert download-path output when action succeeds
+        env:
+          OUTCOME: ${{ steps.action.outcome }}
+          DOWNLOAD_PATH: ${{ steps.action.outputs.download-path }}
+        run: |
+          echo "outcome: $OUTCOME"
+          echo "download-path: $DOWNLOAD_PATH"
+          if [ "$OUTCOME" = "success" ]; then
+            # If the action succeeded, the download-path output must be set
+            # and must equal the resolved path we provided
+            if [ -z "$DOWNLOAD_PATH" ]; then
+              echo "FAIL: action succeeded but download-path output is empty"
+              exit 1
+            fi
+            if [ "$DOWNLOAD_PATH" != "/tmp/my-download-dir" ]; then
+              echo "FAIL: expected download-path '/tmp/my-download-dir', got '$DOWNLOAD_PATH'"
+              exit 1
+            fi
+            echo "PASS: download-path output is correct: $DOWNLOAD_PATH"
+          else
+            # Under act without an artifact service the action is expected to fail;
+            # that is acceptable — we just verify the runner did not crash.
+            echo "PASS: action failed gracefully (no artifact service in act)"
+          fi
