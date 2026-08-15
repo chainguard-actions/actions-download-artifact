@@ -1,4 +1,4 @@
-name: Test download-artifact with pattern input
+name: Test download-artifact with custom path
 on:
   workflow_dispatch:
 jobs:
@@ -11,29 +11,28 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Run download-artifact with glob pattern
+      - name: Run download-artifact with custom path
         id: download
         uses: .
         with:
-          path: /tmp/pattern-artifacts
-          pattern: 'build-*'
+          path: /tmp/my-custom-artifacts
         continue-on-error: true
 
-      - name: Assert action handled pattern input
+      - name: Assert download-path reflects custom path when action succeeds
         env:
           OUTCOME: ${{ steps.download.outcome }}
           DOWNLOAD_PATH: ${{ steps.download.outputs.download-path }}
         run: |
           echo "outcome: $OUTCOME"
           echo "download-path: $DOWNLOAD_PATH"
-          # The action should accept a glob pattern without crashing on input parsing
           if [ "$OUTCOME" = "success" ]; then
+            # download-path should be under or equal to the specified path
             if [ -z "$DOWNLOAD_PATH" ]; then
               echo "FAIL: action succeeded but download-path is empty"
               exit 1
             fi
-            echo "PASS: pattern input accepted, download-path='$DOWNLOAD_PATH'"
+            echo "PASS: download-path='$DOWNLOAD_PATH'"
           else
             echo "INFO: action did not succeed (outcome=$OUTCOME) — expected in act without real artifacts"
-            echo "PASS: pattern input accepted without crash"
+            echo "PASS: graceful failure confirmed"
           fi

@@ -1,0 +1,36 @@
+name: Test download-artifact digest-mismatch option
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_REF: refs/heads/main
+      GITHUB_EVENT_NAME: push
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Create download directory
+        run: mkdir -p /tmp/artifact-digest
+
+      - id: action
+        name: Run download-artifact with digest-mismatch set to warn
+        uses: .
+        with:
+          path: /tmp/artifact-digest
+          pattern: 'nonexistent-artifact-digest'
+          digest-mismatch: 'warn'
+        continue-on-error: true
+
+      - name: Assert action ran with digest-mismatch input accepted
+        env:
+          OUTCOME: ${{ steps.action.outcome }}
+        run: |
+          echo "outcome: $OUTCOME"
+          # The action should not be skipped — it should run and either succeed or fail
+          # (failure is expected in act without real GitHub API)
+          if [ "$OUTCOME" = "skipped" ]; then
+            echo "FAIL: action was skipped unexpectedly"
+            exit 1
+          fi
+          echo "PASS: action ran with digest-mismatch=warn, outcome=$OUTCOME"

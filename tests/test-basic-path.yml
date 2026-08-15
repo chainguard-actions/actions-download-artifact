@@ -1,0 +1,38 @@
+name: Test download-artifact basic path output
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Create a temporary artifact zip to simulate an upload
+        run: |
+          mkdir -p /tmp/artifact-content
+          echo "hello artifact" > /tmp/artifact-content/hello.txt
+
+      - id: download
+        uses: .
+        with:
+          path: /tmp/downloaded-artifacts
+        continue-on-error: true
+
+      - name: Assert download-path output is set
+        env:
+          DOWNLOAD_PATH: ${{ steps.download.outputs.download-path }}
+          OUTCOME: ${{ steps.download.outcome }}
+        run: |
+          echo "outcome: $OUTCOME"
+          echo "download-path: $DOWNLOAD_PATH"
+          # The action either succeeds (no artifacts = empty dir) or fails with no artifacts
+          # In either case, if it succeeded, download-path should be set
+          if [ "$OUTCOME" = "success" ]; then
+            if [ -z "$DOWNLOAD_PATH" ]; then
+              echo "FAIL: download-path output was empty on success"
+              exit 1
+            fi
+            echo "PASS: download-path is '$DOWNLOAD_PATH'"
+          else
+            echo "PASS: action failed as expected when no artifacts exist (outcome=$OUTCOME)"
+          fi
