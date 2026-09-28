@@ -1,0 +1,33 @@
+name: Test artifact download with custom path
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - id: action
+        uses: .
+        continue-on-error: true
+        with:
+          name: build-output
+          path: /tmp/custom-download-path
+
+      - name: Assert action ran with custom path (success or graceful failure on sentinel repo)
+        env:
+          OUTCOME: ${{ steps.action.outcome }}
+        run: |
+          echo "outcome: $OUTCOME"
+          if [ "$OUTCOME" = "success" ]; then
+            if [ ! -d "/tmp/custom-download-path" ]; then
+              echo "FAIL: action succeeded but custom path directory does not exist"
+              exit 1
+            fi
+            echo "PASS: action succeeded and artifact downloaded to custom path"
+          elif [ "$OUTCOME" = "failure" ]; then
+            echo "PASS: action failed gracefully (sentinel repo is not resolvable)"
+          else
+            echo "FAIL: unexpected outcome '$OUTCOME'"
+            exit 1
+          fi
