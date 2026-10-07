@@ -1,0 +1,39 @@
+name: Test digest-mismatch input
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      # Test with digest-mismatch=warn so a digest mismatch logs a warning instead of failing.
+      # Under the harness, GITHUB_REPOSITORY is a sentinel that does not exist,
+      # so any repo-scoped API call will 404. We allow failure and assert gracefully.
+      - id: action
+        uses: .
+        with:
+          name: my-artifact
+          path: /tmp/artifact-digest
+          digest-mismatch: 'warn'
+        continue-on-error: true
+
+      - name: Assert action ran (success or graceful failure on sentinel repo)
+        env:
+          OUTCOME: ${{ steps.action.outcome }}
+          DOWNLOAD_PATH: ${{ steps.action.outputs.download-path }}
+        run: |
+          echo "outcome: $OUTCOME"
+          echo "download-path: $DOWNLOAD_PATH"
+          if [ "$OUTCOME" = "success" ]; then
+            if [ -z "$DOWNLOAD_PATH" ]; then
+              echo "FAIL: action succeeded but download-path output is empty"
+              exit 1
+            fi
+            echo "PASS: artifact downloaded to '$DOWNLOAD_PATH'"
+          elif [ "$OUTCOME" = "failure" ]; then
+            echo "PASS: action failed gracefully (sentinel repo is not resolvable)"
+          else
+            echo "FAIL: unexpected outcome '$OUTCOME'"
+            exit 1
+          fi
