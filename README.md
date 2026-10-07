@@ -14,6 +14,7 @@ Hardened by [Chainguard](https://www.chainguard.dev) from the upstream action at
 | v4.3.0 | [`v4.3.0`](https://github.com/chainguard-actions/actions-download-artifact/tree/v4.3.0) | [`d3f86a1`](https://github.com/actions/download-artifact/commit/d3f86a106a0bac45b974a628896c90dbdf5c8093) |
 | v7.0.0 | [`v7.0.0`](https://github.com/chainguard-actions/actions-download-artifact/tree/v7.0.0) | [`37930b1`](https://github.com/actions/download-artifact/commit/37930b1c2abaa49bbe596cd826c3c89aef350131) |
 | v8.0.1 | [`v8.0.1`](https://github.com/chainguard-actions/actions-download-artifact/tree/v8.0.1) | [`3e5f45b`](https://github.com/actions/download-artifact/commit/3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c) |
+| v8.0.2 | [`v8.0.2`](https://github.com/chainguard-actions/actions-download-artifact/tree/v8.0.2) | [`9000827`](https://github.com/actions/download-artifact/commit/9000827ccba6bdab643e8b6fd33ac0654aef8333) |
 
 ## Privacy
 
